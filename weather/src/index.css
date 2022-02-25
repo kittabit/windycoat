@@ -1,0 +1,58 @@
+.windycoat_container {
+
+}
+
+.windycoat_hourly_container {
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+  grid-gap: 10px;
+}
+
+.windycoat_hourly_single {
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.windycoat_hourly-temp {
+  display: block;
+}
+
+.windycoat_hourly-icon {
+  display: block;
+}
+
+.windycoat_hourly-time {
+  display: block;
+}
+
+.windycoat_hourly-period {
+  display: block;
+}
+
+h2.windycoat-subtitle {
+
+}
+
+.windycoat_daily_container {
+
+}
+
+.windycoat_daily_single {
+
+}
+
+.windycoat_daily-temp {
+
+}
+
+.windycoat_daily-icon {
+
+}
+
+.windycoat_daily-icon img {
+
+}
+
+.windycoat_daily-label {
+  
+}

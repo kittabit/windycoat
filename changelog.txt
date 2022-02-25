@@ -1,0 +1,7 @@
+*** WindyCoat Changelog ***
+
+2021.02.25 - version 0.1.0
+ * New - OpenWeather API Hooks
+ * New - React Shortcode
+ * New - Basic Options & Settings
+ * New - API Routes & Data Storage
