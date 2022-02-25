@@ -4,15 +4,12 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://www.windycoat.com
  * Description: Basic Weather Plugin
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
 
-// TODO:  CACHING OPTIONS IN ADMIN
-// TODO:  ALLOW ADMIN `units` OF MEASUREMENT OPTIONS
 // TODO:  ReactJS Styling
-// TODO:  Add CRON, Remove `developer_tests` Function
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
@@ -32,7 +29,7 @@ class WindyCoat {
 
         $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
         $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-        $this->WC_DB_VERSION = "0.1.0";
+        $this->WC_DB_VERSION = "0.2.0";
 
         if(!is_admin()):
             add_filter( 'script_loader_tag', array($this, "script_loader_wc_widget_js"), 10, 2);
@@ -52,7 +49,22 @@ class WindyCoat {
 
         register_activation_hook( __FILE__, array($this, 'wc_install') );
 
-        add_action( 'init', array($this, 'developer_tests') );
+        add_action( 'wp', array($this, 'wc_scheduled_tasks') );
+        add_action( 'wc_sync_weather', array($this, 'remote_openweather_get_data') );
+
+    }
+
+
+    /**
+    * Setup Scheduled Task to Sync Weather
+    *
+    * @since 0.2.0
+    */
+    function wc_scheduled_tasks() {
+
+        if ( !wp_next_scheduled( 'wc_sync_weather' ) ) {
+            wp_schedule_event(time(), 'hourly', 'wc_sync_weather');
+        }
 
     }
 
@@ -60,7 +72,7 @@ class WindyCoat {
     /**
     * Checks Database & Sets Up Data Store (on activation/install)
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function wc_install(){
 
@@ -80,7 +92,7 @@ class WindyCoat {
     /**
     * Checks Database & Sets Up Data Store (for upgrades versus activation/installation)
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function update_db_check(){
 
@@ -94,7 +106,7 @@ class WindyCoat {
     /**
     * Load & Enable Cardon Fields Support (for admin options)
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function load_carbon_fields(){
 
@@ -105,7 +117,7 @@ class WindyCoat {
     /**
     * Setup Administration Panel Theme Options & Settings
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function add_plugin_settings_page(){
 
@@ -115,8 +127,14 @@ class WindyCoat {
             Field::make( 'text', 'wc_latitude', "Latitude")->set_width( 50 ),
             Field::make( 'text', 'wc_longitude', "Longitude" )->set_width( 50 ),
             Field::make( 'separator', 'wc_openweather_styling', 'OpenWeather API' ),
-            Field::make( 'text', 'wc_openweatherapikey', "API Key")
-        ) );
+            Field::make( 'text', 'wc_openweatherapikey', "API Key"),
+            Field::make( 'text', 'wc_cache_hours', "Hours to Cache")->set_width( 50 ),
+            Field::make( 'select', 'wc_openweather_unit', 'Unit of Measurement' )
+                ->add_options( array(
+                    'standard' => 'Standard',
+                    'metric' => 'Metric',
+                    'imperial' => 'Imperial',
+            ))->set_width( 50 )));
         
     }
 
@@ -124,7 +142,7 @@ class WindyCoat {
     /**
     * Optimize JS Loading for `wc-*` Assets
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function script_loader_wc_widget_js($tag, $handle){
 
@@ -137,7 +155,7 @@ class WindyCoat {
     /**
     * Load all JS/CSS assets from 'weather' React Widget
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function enqueue_wc_widget_js(){
 
@@ -173,7 +191,7 @@ class WindyCoat {
     /**
     * [wc_weather] Shortcode (for React)
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function shortcode_wc_weather_widget( $atts ){
 
@@ -202,7 +220,7 @@ class WindyCoat {
     /**
     * Centralized CURL Configuration & Setup
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function get_remote_date($url){
 
@@ -227,22 +245,27 @@ class WindyCoat {
     /**
     * OpenWeather Map API Queries & Data Storage
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function remote_openweather_get_data(){
 
         $wc_lat = carbon_get_theme_option( 'wc_latitude' );
         $wc_lon = carbon_get_theme_option( 'wc_longitude' );
         $wc_api_key = carbon_get_theme_option( 'wc_openweatherapikey' );
+        $wc_cache_hours = carbon_get_theme_option( 'wc_cache_hours' );
+        if(!$wc_cache_hours): $wc_cache_hours = 1; endif;
+        $wc_unit = carbon_get_theme_option( 'wc_openweather_unit' );
+        if(!$wc_openweather_unit): $wc_openweather_unit = "standard"; endif;
+
         $weather_forecast = array();
 
         $wc_weather_data = get_option("wc_weather_data");
         $wc_weather_last_updated = get_option("wc_weather_last_updated");
 
-        if(time() - $wc_weather_last_updated > 3601):
+        if( time() - $wc_weather_last_updated > (3601 * $wc_cache_hours) ):
 
             //CURRENT WEATHER
-            $remote_url = "https://api.openweathermap.org/data/2.5/weather?lat={$wc_lat}&lon={$wc_lon}&units=imperial&appid={$wc_api_key}";
+            $remote_url = "https://api.openweathermap.org/data/2.5/weather?lat={$wc_lat}&lon={$wc_lon}&units={$wc_unit}&appid={$wc_api_key}";
             $response = $this->get_remote_date($remote_url);
             $weather_forecast['current'] = array(
                 "main" => $response->weather[0]->main,
@@ -259,7 +282,7 @@ class WindyCoat {
             );
 
             // HOURLY FORECAST
-            $remote_url = "https://api.openweathermap.org/data/2.5/onecall?lat={$wc_lat}&lon={$wc_lon}&units=imperial&exclude=current,minutely&appid={$wc_api_key}";
+            $remote_url = "https://api.openweathermap.org/data/2.5/onecall?lat={$wc_lat}&lon={$wc_lon}&units={$wc_unit}&exclude=current,minutely&appid={$wc_api_key}";
             $response = $this->get_remote_date($remote_url);
             foreach (range(0, 12) as $number):
                 $weather_forecast['hourly'][$number] = array(
@@ -315,7 +338,7 @@ class WindyCoat {
     /**
     * Setup API URL's for JSON Output
     *
-    * @since 1.0.0
+    * @since 0.1.0
     */
     function api_response_data( $data ){
 
@@ -330,20 +353,6 @@ class WindyCoat {
             return $weather->daily;
         else:
             return $weather;
-        endif;
-
-    }
-
-
-    /**
-    * Debug & Testing Tools (removing soon)
-    *
-    * @since 1.0.0
-    */
-    function developer_tests(){
-
-        if($_GET['wc_action'] == "getData"):
-            $this->remote_openweather_get_data();
         endif;
 
     }

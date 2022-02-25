@@ -1,5 +1,11 @@
 *** WindyCoat Changelog ***
 
+* New - `wc_openweather_unit` Admin Option
+* New - `wc_cache_hours` Admin Option
+* New - Scheduled CRON Jobs
+* Fix - @Since Updates
+* Fix - `developer_tests` Removal
+
 2021.02.25 - version 0.1.0
  * New - OpenWeather API Hooks
  * New - React Shortcode
