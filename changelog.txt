@@ -1,5 +1,13 @@
 *** WindyCoat Changelog ***
 
+2022.02.28 - version 0.3.0
+* New - Basic Design/Layout for Weather
+* New - Date on "Current" Weather (API Response)
+* Chore - Minor Readme & Description/Tag Updates
+* Chore - Package.json CSS Monitoring
+* New - Powered By Option / Output
+* New - Basic Loading Conditional
+
 2022.02.25 - version 0.2.0
 * New - `wc_openweather_unit` Admin Option
 * New - `wc_cache_hours` Admin Option
