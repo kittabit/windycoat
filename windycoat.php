@@ -3,13 +3,19 @@
  * @wordpress-plugin
  * Plugin Name: Windy Coat
  * Plugin URI: https://www.windycoat.com
- * Description: Basic Weather Plugin
- * Version: 0.2.0
+ * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
+ * Version: 0.3.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
 
-// TODO:  ReactJS Styling
+// TODO:  Proper Unit Output (in design)
+// TODO:  Time Zone Updates
+// TODO:  Powered By Conditional (in React)
+// TODO:  Add Initial Weather GET (after saving data)
+// TODO:  DONT CACHE EMPTY DATA
+// TODO:  Support CRON via URL (for AWS or non-standard configurations)
+// TODO:  Debug logs or output (based on testing with CloudFlare)
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
@@ -29,7 +35,7 @@ class WindyCoat {
 
         $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
         $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-        $this->WC_DB_VERSION = "0.2.0";
+        $this->WC_DB_VERSION = "0.3.0";
 
         if(!is_admin()):
             add_filter( 'script_loader_tag', array($this, "script_loader_wc_widget_js"), 10, 2);
@@ -81,7 +87,7 @@ class WindyCoat {
 
         if ( $installed_ver != $this->WC_DB_VERSION ):
             /*
-            Might USE SQL Here, Might Not - Just In Case 
+            Note:  Might USE SQL Here, Might Not - Just In Case 
             */
             update_option("wc_db_version", $this->WC_DB_VERSION);
         endif;
@@ -126,6 +132,7 @@ class WindyCoat {
             Field::make( 'separator', 'wc_openweather_basic', 'Basic Settings' ),
             Field::make( 'text', 'wc_latitude', "Latitude")->set_width( 50 ),
             Field::make( 'text', 'wc_longitude', "Longitude" )->set_width( 50 ),
+            Field::make( 'checkbox', 'wc_enable_powered_by', __( 'Show Powered By WindyCoat (Footer)' ) )->set_option_value( 'yes' ),
             Field::make( 'separator', 'wc_openweather_styling', 'OpenWeather API' ),
             Field::make( 'text', 'wc_openweatherapikey', "API Key"),
             Field::make( 'text', 'wc_cache_hours', "Hours to Cache")->set_width( 50 ),
@@ -197,20 +204,21 @@ class WindyCoat {
 
         $default_atts = array();
         $args = shortcode_atts( $default_atts, $atts );
-        $unique_div_id = uniqid('id');
-      
+
         $wc_lat = carbon_get_theme_option( 'wc_latitude' );
         $wc_lon = carbon_get_theme_option( 'wc_longitude' );
+        $wc_enable_powered_by = carbon_get_theme_option( 'wc_enable_powered_by' );
         ob_start();
         ?>
         <script>
         window.wcSettings = window.wcSettings || {};
-        window.wcSettings["<?= $unique_div_id ?>"] = {
+        window.wcSettings = {
             'latitude': '<?= $wc_lat; ?>',
             'longitude': '<?= $wc_lon; ?>',
+            'show_logo': '<?= $wc_enable_powered_by; ?>'
         }
         </script>
-        <div class="wc-root" data-id="<?= $unique_div_id ?>"></div>
+        <div class="wc-root <? if($wc_enable_powered_by): ?>wc-show-powered<?php endif; ?>"></div>
         <?php
         return ob_get_clean();
 
@@ -268,6 +276,7 @@ class WindyCoat {
             $remote_url = "https://api.openweathermap.org/data/2.5/weather?lat={$wc_lat}&lon={$wc_lon}&units={$wc_unit}&appid={$wc_api_key}";
             $response = $this->get_remote_date($remote_url);
             $weather_forecast['current'] = array(
+                "date" => date("F j, Y"),
                 "main" => $response->weather[0]->main,
                 "description" => $response->weather[0]->description,
                 "icon" => $response->weather[0]->icon,
@@ -284,7 +293,7 @@ class WindyCoat {
             // HOURLY FORECAST
             $remote_url = "https://api.openweathermap.org/data/2.5/onecall?lat={$wc_lat}&lon={$wc_lon}&units={$wc_unit}&exclude=current,minutely&appid={$wc_api_key}";
             $response = $this->get_remote_date($remote_url);
-            foreach (range(0, 12) as $number):
+            foreach (range(0, 14) as $number):
                 $weather_forecast['hourly'][$number] = array(
                     "dt" => $response->hourly[$number]->dt,
                     "hour" => date("h", $response->hourly[$number]->dt),
