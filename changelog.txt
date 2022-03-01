@@ -1,5 +1,16 @@
 *** WindyCoat Changelog ***
 
+2022.03.01 - version 0.4.0
+* New - `developer_tools` Function
+* Fix - `remote_openweather_get_data` Disable Data Storage if NULL
+* New - `WC_DEBUG` Support (for testing multiple environments)
+* Fix - `api_response_data` echo vs return (better compatibility)
+* Fix - `enqueue_wc_widget_js` Removing Empty JS Enqueue
+* New - Carbon Fields Cleanup (Stylistic)
+* New - Carbon Fields New Fields & Organization of Output
+* New - `rest_api_init` name (current, hourly, daily) vs digit (1, 2, 3)
+* New - React based conditional for footer (logo/powered by notice)
+
 2022.02.28 - version 0.3.0
 * New - Basic Design/Layout for Weather
 * New - Date on "Current" Weather (API Response)

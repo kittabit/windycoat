@@ -4,23 +4,22 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://www.windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 0.3.0
+ * Version: 0.4.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
 
 // TODO:  Proper Unit Output (in design)
-// TODO:  Time Zone Updates
-// TODO:  Powered By Conditional (in React)
-// TODO:  Add Initial Weather GET (after saving data)
-// TODO:  DONT CACHE EMPTY DATA
-// TODO:  Support CRON via URL (for AWS or non-standard configurations)
-// TODO:  Debug logs or output (based on testing with CloudFlare)
+// TODO:  Block (versus just shortcode)
+// TODO:  Documentation
+// TODO:  Debug/Developer Tools Security (with admin key)
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
 require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+
 use Carbon_Fields\Container;
+use Carbon_Fields\Block;
 use Carbon_Fields\Field;
 
 define( 'Carbon_Fields\URL', $_SERVER['HTTP_X_FORWARDED_PROTO'] . "://" . $_SERVER['HTTP_X_FORWARDED_HOST'] . "/wp-content/plugins/windycoat/vendor/htmlburger/carbon-fields" );
@@ -30,33 +29,39 @@ class WindyCoat {
     protected $WC_WIDGET_PATH;
     protected $WC_ASSET_MANIFEST;
     protected $WC_DB_VERSION;
+    protected $WC_DEBUG;
 
     function __construct() {
 
         $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
         $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-        $this->WC_DB_VERSION = "0.3.0";
+        $this->WC_DB_VERSION = "0.4.0";
+        if($_GET['wc_debug'] == "1"):
+            $this->WC_DEBUG = true;
+        else:
+            $this->WC_DEBUG = false;
+        endif;
+
+        register_activation_hook( __FILE__, array($this, 'wc_install') );
 
         if(!is_admin()):
             add_filter( 'script_loader_tag', array($this, "script_loader_wc_widget_js"), 10, 2);
             add_action( 'wp_enqueue_scripts', array($this, "enqueue_wc_widget_js"));
         endif; 
         add_shortcode( 'wc_weather', array($this, "shortcode_wc_weather_widget"));
-
         add_action( 'after_setup_theme', array($this, 'load_carbon_fields') );
         add_action( 'carbon_fields_register_fields', array($this, 'add_plugin_settings_page') );
         add_action( 'plugins_loaded', array($this, 'update_db_check') );
         add_action( 'rest_api_init', function () {
-            register_rest_route( 'windycoat/v1', '/weather/(?P<type>\d+)', array(
+            register_rest_route( 'windycoat/v1', '/weather/(?P<type>\S+)', array(
               'methods' => 'GET',
               'callback' => array($this, 'api_response_data'),
             ));
         });
-
-        register_activation_hook( __FILE__, array($this, 'wc_install') );
-
         add_action( 'wp', array($this, 'wc_scheduled_tasks') );
         add_action( 'wc_sync_weather', array($this, 'remote_openweather_get_data') );
+        add_action( 'init', array($this, 'developer_tools') );
+        add_action( 'admin_enqueue_scripts', array($this, 'admin_css_enqueue') );
 
     }
 
@@ -120,6 +125,7 @@ class WindyCoat {
 
     }
 
+
     /**
     * Setup Administration Panel Theme Options & Settings
     *
@@ -127,24 +133,154 @@ class WindyCoat {
     */
     function add_plugin_settings_page(){
 
-       Container::make( 'theme_options', 'WindyCoat' )
-        ->add_fields( array(
-            Field::make( 'separator', 'wc_openweather_basic', 'Basic Settings' ),
+        $timezones = array(
+            'Pacific/Midway'       => "(GMT-11:00) Midway Island",
+            'US/Samoa'             => "(GMT-11:00) Samoa",
+            'US/Hawaii'            => "(GMT-10:00) Hawaii",
+            'US/Alaska'            => "(GMT-09:00) Alaska",
+            'US/Pacific'           => "(GMT-08:00) Pacific Time (US &amp; Canada)",
+            'America/Tijuana'      => "(GMT-08:00) Tijuana",
+            'US/Arizona'           => "(GMT-07:00) Arizona",
+            'US/Mountain'          => "(GMT-07:00) Mountain Time (US &amp; Canada)",
+            'America/Chihuahua'    => "(GMT-07:00) Chihuahua",
+            'America/Mazatlan'     => "(GMT-07:00) Mazatlan",
+            'America/Mexico_City'  => "(GMT-06:00) Mexico City",
+            'America/Monterrey'    => "(GMT-06:00) Monterrey",
+            'Canada/Saskatchewan'  => "(GMT-06:00) Saskatchewan",
+            'US/Central'           => "(GMT-06:00) Central Time (US &amp; Canada)",
+            'US/Eastern'           => "(GMT-05:00) Eastern Time (US &amp; Canada)",
+            'US/East-Indiana'      => "(GMT-05:00) Indiana (East)",
+            'America/Bogota'       => "(GMT-05:00) Bogota",
+            'America/Lima'         => "(GMT-05:00) Lima",
+            'America/Caracas'      => "(GMT-04:30) Caracas",
+            'Canada/Atlantic'      => "(GMT-04:00) Atlantic Time (Canada)",
+            'America/La_Paz'       => "(GMT-04:00) La Paz",
+            'America/Santiago'     => "(GMT-04:00) Santiago",
+            'Canada/Newfoundland'  => "(GMT-03:30) Newfoundland",
+            'America/Buenos_Aires' => "(GMT-03:00) Buenos Aires",
+            'Greenland'            => "(GMT-03:00) Greenland",
+            'Atlantic/Stanley'     => "(GMT-02:00) Stanley",
+            'Atlantic/Azores'      => "(GMT-01:00) Azores",
+            'Atlantic/Cape_Verde'  => "(GMT-01:00) Cape Verde Is.",
+            'Africa/Casablanca'    => "(GMT) Casablanca",
+            'Europe/Dublin'        => "(GMT) Dublin",
+            'Europe/Lisbon'        => "(GMT) Lisbon",
+            'Europe/London'        => "(GMT) London",
+            'Africa/Monrovia'      => "(GMT) Monrovia",
+            'Europe/Amsterdam'     => "(GMT+01:00) Amsterdam",
+            'Europe/Belgrade'      => "(GMT+01:00) Belgrade",
+            'Europe/Berlin'        => "(GMT+01:00) Berlin",
+            'Europe/Bratislava'    => "(GMT+01:00) Bratislava",
+            'Europe/Brussels'      => "(GMT+01:00) Brussels",
+            'Europe/Budapest'      => "(GMT+01:00) Budapest",
+            'Europe/Copenhagen'    => "(GMT+01:00) Copenhagen",
+            'Europe/Ljubljana'     => "(GMT+01:00) Ljubljana",
+            'Europe/Madrid'        => "(GMT+01:00) Madrid",
+            'Europe/Paris'         => "(GMT+01:00) Paris",
+            'Europe/Prague'        => "(GMT+01:00) Prague",
+            'Europe/Rome'          => "(GMT+01:00) Rome",
+            'Europe/Sarajevo'      => "(GMT+01:00) Sarajevo",
+            'Europe/Skopje'        => "(GMT+01:00) Skopje",
+            'Europe/Stockholm'     => "(GMT+01:00) Stockholm",
+            'Europe/Vienna'        => "(GMT+01:00) Vienna",
+            'Europe/Warsaw'        => "(GMT+01:00) Warsaw",
+            'Europe/Zagreb'        => "(GMT+01:00) Zagreb",
+            'Europe/Athens'        => "(GMT+02:00) Athens",
+            'Europe/Bucharest'     => "(GMT+02:00) Bucharest",
+            'Africa/Cairo'         => "(GMT+02:00) Cairo",
+            'Africa/Harare'        => "(GMT+02:00) Harare",
+            'Europe/Helsinki'      => "(GMT+02:00) Helsinki",
+            'Europe/Istanbul'      => "(GMT+02:00) Istanbul",
+            'Asia/Jerusalem'       => "(GMT+02:00) Jerusalem",
+            'Europe/Kiev'          => "(GMT+02:00) Kyiv",
+            'Europe/Minsk'         => "(GMT+02:00) Minsk",
+            'Europe/Riga'          => "(GMT+02:00) Riga",
+            'Europe/Sofia'         => "(GMT+02:00) Sofia",
+            'Europe/Tallinn'       => "(GMT+02:00) Tallinn",
+            'Europe/Vilnius'       => "(GMT+02:00) Vilnius",
+            'Asia/Baghdad'         => "(GMT+03:00) Baghdad",
+            'Asia/Kuwait'          => "(GMT+03:00) Kuwait",
+            'Africa/Nairobi'       => "(GMT+03:00) Nairobi",
+            'Asia/Riyadh'          => "(GMT+03:00) Riyadh",
+            'Europe/Moscow'        => "(GMT+03:00) Moscow",
+            'Asia/Tehran'          => "(GMT+03:30) Tehran",
+            'Asia/Baku'            => "(GMT+04:00) Baku",
+            'Europe/Volgograd'     => "(GMT+04:00) Volgograd",
+            'Asia/Muscat'          => "(GMT+04:00) Muscat",
+            'Asia/Tbilisi'         => "(GMT+04:00) Tbilisi",
+            'Asia/Yerevan'         => "(GMT+04:00) Yerevan",
+            'Asia/Kabul'           => "(GMT+04:30) Kabul",
+            'Asia/Karachi'         => "(GMT+05:00) Karachi",
+            'Asia/Tashkent'        => "(GMT+05:00) Tashkent",
+            'Asia/Kolkata'         => "(GMT+05:30) Kolkata",
+            'Asia/Kathmandu'       => "(GMT+05:45) Kathmandu",
+            'Asia/Yekaterinburg'   => "(GMT+06:00) Ekaterinburg",
+            'Asia/Almaty'          => "(GMT+06:00) Almaty",
+            'Asia/Dhaka'           => "(GMT+06:00) Dhaka",
+            'Asia/Novosibirsk'     => "(GMT+07:00) Novosibirsk",
+            'Asia/Bangkok'         => "(GMT+07:00) Bangkok",
+            'Asia/Jakarta'         => "(GMT+07:00) Jakarta",
+            'Asia/Krasnoyarsk'     => "(GMT+08:00) Krasnoyarsk",
+            'Asia/Chongqing'       => "(GMT+08:00) Chongqing",
+            'Asia/Hong_Kong'       => "(GMT+08:00) Hong Kong",
+            'Asia/Kuala_Lumpur'    => "(GMT+08:00) Kuala Lumpur",
+            'Australia/Perth'      => "(GMT+08:00) Perth",
+            'Asia/Singapore'       => "(GMT+08:00) Singapore",
+            'Asia/Taipei'          => "(GMT+08:00) Taipei",
+            'Asia/Ulaanbaatar'     => "(GMT+08:00) Ulaan Bataar",
+            'Asia/Urumqi'          => "(GMT+08:00) Urumqi",
+            'Asia/Irkutsk'         => "(GMT+09:00) Irkutsk",
+            'Asia/Seoul'           => "(GMT+09:00) Seoul",
+            'Asia/Tokyo'           => "(GMT+09:00) Tokyo",
+            'Australia/Adelaide'   => "(GMT+09:30) Adelaide",
+            'Australia/Darwin'     => "(GMT+09:30) Darwin",
+            'Asia/Yakutsk'         => "(GMT+10:00) Yakutsk",
+            'Australia/Brisbane'   => "(GMT+10:00) Brisbane",
+            'Australia/Canberra'   => "(GMT+10:00) Canberra",
+            'Pacific/Guam'         => "(GMT+10:00) Guam",
+            'Australia/Hobart'     => "(GMT+10:00) Hobart",
+            'Australia/Melbourne'  => "(GMT+10:00) Melbourne",
+            'Pacific/Port_Moresby' => "(GMT+10:00) Port Moresby",
+            'Australia/Sydney'     => "(GMT+10:00) Sydney",
+            'Asia/Vladivostok'     => "(GMT+11:00) Vladivostok",
+            'Asia/Magadan'         => "(GMT+12:00) Magadan",
+            'Pacific/Auckland'     => "(GMT+12:00) Auckland",
+            'Pacific/Fiji'         => "(GMT+12:00) Fiji",
+        );
+
+        $units = array(
+            'standard' => 'Standard',
+            'metric' => 'Metric',
+            'imperial' => 'Imperial',
+        );
+
+        Container::make( 'theme_options', 'WindyCoat' )->add_fields( array(
+            Field::make( 'separator', 'wc_openweather_basic', 'Basic Settings' )->set_classes( 'windycoat-options-heading' ),
             Field::make( 'text', 'wc_latitude', "Latitude")->set_width( 50 ),
-            Field::make( 'text', 'wc_longitude', "Longitude" )->set_width( 50 ),
-            Field::make( 'checkbox', 'wc_enable_powered_by', __( 'Show Powered By WindyCoat (Footer)' ) )->set_option_value( 'yes' ),
-            Field::make( 'separator', 'wc_openweather_styling', 'OpenWeather API' ),
+            Field::make( 'text', 'wc_longitude', "Longitude" )->set_width( 50 ),            
+            Field::make( 'separator', 'wc_openweather_styling', 'OpenWeather API' )->set_classes( 'windycoat-options-heading' ),
             Field::make( 'text', 'wc_openweatherapikey', "API Key"),
-            Field::make( 'text', 'wc_cache_hours', "Hours to Cache")->set_width( 50 ),
-            Field::make( 'select', 'wc_openweather_unit', 'Unit of Measurement' )
-                ->add_options( array(
-                    'standard' => 'Standard',
-                    'metric' => 'Metric',
-                    'imperial' => 'Imperial',
-            ))->set_width( 50 )));
+            Field::make( 'text', 'wc_cache_hours', "Hours to Cache")->set_width( 33 ),
+            Field::make( 'select', 'wc_time_zone', 'Time Zone' )->add_options( $timezones )->set_default_value('US/Eastern')->set_width( 33 ),            
+            Field::make( 'select', 'wc_openweather_unit', 'Unit of Measurement' )->add_options( $units )->set_default_value('imperial')->set_width( 33 ),
+            Field::make( 'separator', 'wc_openweather_misc', 'Misc Options' )->set_classes( 'windycoat-options-heading' ),
+            Field::make( 'checkbox', 'wc_enable_powered_by', __( 'Show Powered By WindyCoat (Footer)' ) )->set_option_value( 'yes' ),
+        ));
         
     }
 
+
+    /**
+    * Custom Admin CSS for Options
+    *
+    * @since 0.4.0
+    */
+    function admin_css_enqueue(){
+
+        wp_enqueue_style( 'windycoat-admin-css', plugin_dir_url( __FILE__ ) . '/public/css/admin.css' );
+
+    }
+    
 
     /**
     * Optimize JS Loading for `wc-*` Assets
@@ -172,9 +308,7 @@ class WindyCoat {
           wp_enqueue_style( 'wc', get_site_url() . $asset_manifest[ 'main.css' ] );
         }
     
-        wp_enqueue_script( 'wc-runtime', get_site_url() . $asset_manifest[ 'runtime~main.js' ], array(), null, true );
-    
-        wp_enqueue_script( 'wc-main', get_site_url() . $asset_manifest[ 'main.js' ], array('wc-runtime'), null, true );
+        wp_enqueue_script( 'wc-main', get_site_url() . $asset_manifest[ 'main.js' ], array(), null, true );
     
         foreach ( $asset_manifest as $key => $value ) {
           if ( preg_match( '@static/js/(.*)\.chunk\.js@', $key, $matches ) ) {
@@ -218,7 +352,7 @@ class WindyCoat {
             'show_logo': '<?= $wc_enable_powered_by; ?>'
         }
         </script>
-        <div class="wc-root <? if($wc_enable_powered_by): ?>wc-show-powered<?php endif; ?>"></div>
+        <div class="wc-root"></div>
         <?php
         return ob_get_clean();
 
@@ -245,6 +379,12 @@ class WindyCoat {
         $response = curl_exec($curl);
         curl_close($curl);
 
+        if($this->WC_DEBUG):
+            echo "<span><strong>Debug URL: " . $url . "</strong></span><br />\n";
+            print_r($response);
+            echo "<hr />\n";
+        endif;
+
         return json_decode($response);
 
     }
@@ -260,15 +400,22 @@ class WindyCoat {
         $wc_lat = carbon_get_theme_option( 'wc_latitude' );
         $wc_lon = carbon_get_theme_option( 'wc_longitude' );
         $wc_api_key = carbon_get_theme_option( 'wc_openweatherapikey' );
+
         $wc_cache_hours = carbon_get_theme_option( 'wc_cache_hours' );
         if(!$wc_cache_hours): $wc_cache_hours = 1; endif;
+
         $wc_unit = carbon_get_theme_option( 'wc_openweather_unit' );
         if(!$wc_openweather_unit): $wc_openweather_unit = "standard"; endif;
+
+        $wc_timezone = carbon_get_theme_option( 'wc_time_zone' );
+        if(!$wc_timezone): $wc_timezone = "US/Eastern"; endif;        
 
         $weather_forecast = array();
 
         $wc_weather_data = get_option("wc_weather_data");
         $wc_weather_last_updated = get_option("wc_weather_last_updated");
+
+        date_default_timezone_set($wc_timezone);
 
         if( time() - $wc_weather_last_updated > (3601 * $wc_cache_hours) ):
 
@@ -336,8 +483,10 @@ class WindyCoat {
                 );
             endforeach;
 
-            update_option("wc_weather_data", json_encode($weather_forecast));
-            update_option("wc_weather_last_updated", time());
+            if( count($weather_forecast['daily']) > 0 && count($weather_forecast['daily']) > 0 ):
+                update_option("wc_weather_data", json_encode($weather_forecast));
+                update_option("wc_weather_last_updated", time());
+            endif;
 
         endif;
 
@@ -352,16 +501,44 @@ class WindyCoat {
     function api_response_data( $data ){
 
         $selected_type = $data['type'];
+
+        if(!get_option("wc_weather_data")):
+            $this->remote_openweather_get_data();            
+        endif;
+
         $weather = json_decode(get_option("wc_weather_data"));
-        
-        if($selected_type == 1):
-            return $weather->current;
-        elseif($selected_type == 2):
-            return $weather->hourly;
-        elseif($selected_type == 3):
-            return $weather->daily;
-        else:
-            return $weather;
+        if($selected_type == "current"):
+            echo json_encode($weather->current);
+        elseif($selected_type == "hourly"):
+            echo json_encode($weather->hourly);
+        elseif($selected_type == "daily"):
+            echo json_encode($weather->daily);
+        endif;
+
+    }
+
+
+    /**
+    * Custom Tools for Testing, Manual CRON's, etc.
+    *
+    * @since 0.4.0
+    */
+    function developer_tools(){
+
+        if($_GET['windycoat_action'] == "purge"):
+
+            update_option("wc_weather_data", "");
+            update_option("wc_weather_last_updated", "");
+
+        elseif($_GET['windycoat_action'] == "import"):
+
+            $this->remote_openweather_get_data();
+
+        elseif($_GET['windycoat_action'] == "validate"):
+
+            $weather = json_decode(get_option("wc_weather_data"));
+            print_r($weather);
+
         endif;
 
     }

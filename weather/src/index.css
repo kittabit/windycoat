@@ -151,7 +151,6 @@ h2.windycoat-subtitle {
 
 .windycoat_powered {
   text-align: center;
-  display: none;
 }
 
 .windycoat_powered p {
@@ -162,10 +161,6 @@ h2.windycoat-subtitle {
 
 .windycoat_powered img {
   max-width: 150px;
-}
-
-.wc-show-powered .windycoat_powered {
-  display: block;
 }
 
 .windycoat_current_container_right .windycoat_50_50_grid_column, .windycoat_current_container_right .windycoat_33_grid_column {
