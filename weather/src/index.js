@@ -2,6 +2,29 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 
+function PoweredByFooter() {
+  const enableFooter = window.wcSettings.show_logo;
+  if (enableFooter) {
+    return (
+      <div className="windycoat_footer">
+        <div className="windycoat_powered">
+          <p>Powered by:</p>
+          <a href="https://windycoat.com/" rel="noopener" target="_blank" title="Powered by WindyCoat Weather Plugin">
+            <img width="155" height="33" src="/wp-content/plugins/windycoat/public/images/windycoat_logo.png" alt="Powered by WindyCoat Weather Plugin" loading="lazy" />
+          </a>
+        </div>
+      </div>          
+    );
+  } else {
+    return (
+      <div className="windycoat_footer">
+        <div className="windycoat_powered">
+          &nbsp;
+        </div>
+      </div>          
+    );
+  } 
+}
 class App extends React.Component {
   constructor (props){
     super(props);
@@ -9,15 +32,14 @@ class App extends React.Component {
       weather_current: [],
       weather_hourly: [],
       weather_daily: [],
-      isLoading: 1,
-      current_time: (new Date()).toLocaleString()
+      isLoading: 1
     }
   }
   componentDidMount() {
     Promise.all([
-      fetch('/wp-json/windycoat/v1/weather/1'),
-      fetch('/wp-json/windycoat/v1/weather/2'),
-      fetch('/wp-json/windycoat/v1/weather/3')
+      fetch('/wp-json/windycoat/v1/weather/current/'),
+      fetch('/wp-json/windycoat/v1/weather/hourly/'),
+      fetch('/wp-json/windycoat/v1/weather/daily/')
     ])
     .then(([res1, res2, res3]) => Promise.all([res1.json(), res2.json(), res3.json()]))
     .then(([data1, data2, data3]) => this.setState({
@@ -113,14 +135,7 @@ class App extends React.Component {
             ))}
           </div>
           
-          <div className="windycoat_footer">
-            <div className="windycoat_powered">
-              <p>Powered by:</p>
-              <a href="https://windycoat.com/" rel="noopener" target="_blank" title="Powered by WindyCoat Weather Plugin">
-                <img width="155" height="33" src="/wp-content/plugins/windycoat/public/images/windycoat_logo.png" alt="Powered by WindyCoat Weather Plugin" loading="lazy" />
-              </a>
-            </div>
-          </div>          
+          <PoweredByFooter />
         </div>
         )}
       </div>
