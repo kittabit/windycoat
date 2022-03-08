@@ -1,5 +1,8 @@
 *** WindyCoat Changelog ***
 
+2022.03.01 - version 0.5.0
+* Fix - Moved Options under "Settings"
+
 2022.03.01 - version 0.4.0
 * New - `developer_tools` Function
 * Fix - `remote_openweather_get_data` Disable Data Storage if NULL
