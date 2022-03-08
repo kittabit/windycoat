@@ -4,13 +4,10 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://www.windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 0.5.0
+ * Version: 1.0.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
-
-// TODO:  Proper Unit Output (in design)
-// TODO:  Documentation
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
@@ -34,7 +31,7 @@ if (!class_exists("WindyCoat")) {
 
             $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
             $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-            $this->WC_DB_VERSION = "0.5.0.a";
+            $this->WC_DB_VERSION = "1.0.0";
 
             register_activation_hook( __FILE__, array($this, 'wc_install') );
 
@@ -302,25 +299,25 @@ if (!class_exists("WindyCoat")) {
             $asset_manifest = json_decode( file_get_contents( $this->WC_ASSET_MANIFEST ), true )['files'];
 
             if ( isset( $asset_manifest[ 'main.css' ] ) ) {
-            wp_enqueue_style( 'wc', get_site_url() . $asset_manifest[ 'main.css' ] );
+                wp_enqueue_style( 'wc', get_site_url() . $asset_manifest[ 'main.css' ] );
             }
         
             wp_enqueue_script( 'wc-main', get_site_url() . $asset_manifest[ 'main.js' ], array(), null, true );
         
             foreach ( $asset_manifest as $key => $value ) {
-            if ( preg_match( '@static/js/(.*)\.chunk\.js@', $key, $matches ) ) {
-                if ( $matches && is_array( $matches ) && count( $matches ) === 2 ) {
-                $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                wp_enqueue_script( $name, get_site_url() . $value, array( 'wc-main' ), null, true );
+                if ( preg_match( '@static/js/(.*)\.chunk\.js@', $key, $matches ) ) {
+                    if ( $matches && is_array( $matches ) && count( $matches ) === 2 ) {
+                    $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
+                    wp_enqueue_script( $name, get_site_url() . $value, array( 'wc-main' ), null, true );
+                    }
                 }
-            }
-        
-            if ( preg_match( '@static/css/(.*)\.chunk\.css@', $key, $matches ) ) {
-                if ( $matches && is_array( $matches ) && count( $matches ) == 2 ) {
-                $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                wp_enqueue_style( $name, get_site_url() . $value, array( 'wc' ), null );
+            
+                if ( preg_match( '@static/css/(.*)\.chunk\.css@', $key, $matches ) ) {
+                    if ( $matches && is_array( $matches ) && count( $matches ) == 2 ) {
+                    $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
+                    wp_enqueue_style( $name, get_site_url() . $value, array( 'wc' ), null );
+                    }
                 }
-            }
             }
 
         }
@@ -339,6 +336,8 @@ if (!class_exists("WindyCoat")) {
             $wc_lat = carbon_get_theme_option( 'wc_latitude' );
             $wc_lon = carbon_get_theme_option( 'wc_longitude' );
             $wc_enable_powered_by = carbon_get_theme_option( 'wc_enable_powered_by' );
+            $wc_openweather_unit = carbon_get_theme_option( 'wc_openweather_unit' );
+            
             ob_start();
             ?>
             <script>
@@ -346,7 +345,8 @@ if (!class_exists("WindyCoat")) {
             window.wcSettings = {
                 'latitude': '<?= $wc_lat; ?>',
                 'longitude': '<?= $wc_lon; ?>',
-                'show_logo': '<?= $wc_enable_powered_by; ?>'
+                'show_logo': '<?= $wc_enable_powered_by; ?>',
+                'unit_of_measurement': '<?= $wc_openweather_unit; ?>'
             }
             </script>
             <div class="wc-root"></div>

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/wp-content/plugins/windycoat/weather/build/static/css/main.1bc93b64.css",
+    "main.js": "/wp-content/plugins/windycoat/weather/build/static/js/main.1255d4d9.js",
+    "index.html": "/wp-content/plugins/windycoat/weather/build/index.html",
+    "main.1bc93b64.css.map": "/wp-content/plugins/windycoat/weather/build/static/css/main.1bc93b64.css.map",
+    "main.1255d4d9.js.map": "/wp-content/plugins/windycoat/weather/build/static/js/main.1255d4d9.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.1bc93b64.css",
+    "static/js/main.1255d4d9.js"
+  ]
+}
