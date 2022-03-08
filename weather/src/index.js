@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import Temperature from './Components/temperature'; 
+import './index.css'; 
 
 function PoweredByFooter() {
   const enableFooter = window.wcSettings.show_logo;
@@ -58,7 +59,7 @@ class App extends React.Component {
         
         {this.state.isLoading ? (
           <div className="windycoat_loading">Loading Current Weather...</div>
-        ) : (
+        ) : ( 
         <div>
           <div className="windycoat_current_container">          
               <div className="windycoat_current_container_left">
@@ -66,14 +67,14 @@ class App extends React.Component {
                   <img width="100" height="100" src={`https://openweathermap.org/img/wn/${ this.state.weather_current.icon }@2x.png`} alt={this.state.weather_current.description } loading="lazy" />
                   <span className="windycoat_current_description">{ this.state.weather_current.description }</span>
 
-                  <div className="windycoat_50_50_grid">
+                  <div className="windycoat_50_50_grid"> 
                     <div className="windycoat_50_50_grid_column">
                       <span className="windycoat_grid_column_title">Current</span>
-                      <span className="windycoat_grid_column_value">{ this.state.weather_current.temp }&deg;F</span>
+                      <span className="windycoat_grid_column_value">{ this.state.weather_current.temp }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
                     </div>
                     <div className="windycoat_50_50_grid_column">
                       <span className="windycoat_grid_column_title">Feels Like</span>
-                      <span className="windycoat_grid_column_value">{ this.state.weather_current.feels_like }&deg;F</span>
+                      <span className="windycoat_grid_column_value">{ this.state.weather_current.feels_like }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
                     </div>                
                   </div>
               </div>
@@ -83,11 +84,11 @@ class App extends React.Component {
                 <div className="windycoat_50_50_grid">
                   <div className="windycoat_50_50_grid_column">
                     <span className="windycoat_grid_column_title">Low</span>
-                    <span className="windycoat_grid_column_value">{ this.state.weather_current.temp_min }&deg;F</span>
+                    <span className="windycoat_grid_column_value">{ this.state.weather_current.temp_min }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
                   </div>
                   <div className="windycoat_50_50_grid_column">
                     <span className="windycoat_grid_column_title">High</span>
-                    <span className="windycoat_grid_column_value">{ this.state.weather_current.temp_max }&deg;F</span>
+                    <span className="windycoat_grid_column_value">{ this.state.weather_current.temp_max }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
                   </div>                
                 </div>               
 
@@ -112,7 +113,7 @@ class App extends React.Component {
           <div className="windycoat_hourly_container">
             {this.state.weather_hourly.map((item, index) => (
             <div className="windycoat_hourly_single">
-              <span className="windycoat_hourly-temp">{ Math.round(item.temp) }&deg;F</span>
+              <span className="windycoat_hourly-temp">{ Math.round(item.temp) }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
               <div className="windycoat_hourly-icon">
                 <img width="50" height="50" src={`https://openweathermap.org/img/wn/${ item.icon }.png`} alt={ item.description } loading="lazy" />
               </div>
@@ -126,7 +127,7 @@ class App extends React.Component {
           <div className="windycoat_daily_container">
             {this.state.weather_daily.map((item, index) => (
             <div className="windycoat_daily_single">            
-              <span className="windycoat_daily-temp">{  Math.round(item.temp_low) }&deg;F / {  Math.round(item.temp_high) }&deg;F</span>
+              <span className="windycoat_daily-temp">{  Math.round(item.temp_low) }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /> / {  Math.round(item.temp_high) }&deg;<Temperature type={window.wcSettings.unit_of_measurement} /></span>
               <div className="windycoat_daily-icon">
                 <img width="50" height="50" src={`https://openweathermap.org/img/wn/${ item.icon }.png`} alt={ item.description } loading="lazy" />
               </div>

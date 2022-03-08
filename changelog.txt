@@ -1,7 +1,11 @@
 *** WindyCoat Changelog ***
 
+2022.03.08 - version 1.0.0
+* Chore - Final Cleanup & Prep for Plugin Review
+
 2022.03.01 - version 0.5.0
 * Fix - Moved Options under "Settings"
+* New - Misc Cleanup & Options
 
 2022.03.01 - version 0.4.0
 * New - `developer_tools` Function
