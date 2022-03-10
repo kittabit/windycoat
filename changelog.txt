@@ -1,40 +1,65 @@
-*** WindyCoat Changelog ***
+# Changelog
+All notable changes `WindyCoat` will be documented in this file.
 
-2022.03.08 - version 1.0.0
-* Chore - Final Cleanup & Prep for Plugin Review
+## [1.1.0] - 2022-03-10
+### Fixed:
+- `wp_remote_get` / `wp_remote_retrieve_body` vs CURL
+- PHP Short Tags Removal
+### Changed:
+- `readme.txt` updates
+- `changelog.txt` updates
+### Added:
+- `esc_js` for JS variables
+- `esc_html` for HTML in Block
+- Dynamic `Carbon_Fields\URL` Plugin Path Support
 
-2022.03.01 - version 0.5.0
-* Fix - Moved Options under "Settings"
-* New - Misc Cleanup & Options
+## [1.0.0] - 2022-03-08
+### Changed:
+- Final Cleanup & Prep for Plugin Review
 
-2022.03.01 - version 0.4.0
-* New - `developer_tools` Function
-* Fix - `remote_openweather_get_data` Disable Data Storage if NULL
-* New - `WC_DEBUG` Support (for testing multiple environments)
-* Fix - `api_response_data` echo vs return (better compatibility)
-* Fix - `enqueue_wc_widget_js` Removing Empty JS Enqueue
-* New - Carbon Fields Cleanup (Stylistic)
-* New - Carbon Fields New Fields & Organization of Output
-* New - `rest_api_init` name (current, hourly, daily) vs digit (1, 2, 3)
-* New - React based conditional for footer (logo/powered by notice)
+## [0.5.0] - 2022-03-01
+### Changed:
+- Moved Options under "Settings"
+### Added:
+- Misc Cleanup & Options
+### Removed:
+- `developer_tools` & `WC_DEBUG` Removed
 
-2022.02.28 - version 0.3.0
-* New - Basic Design/Layout for Weather
-* New - Date on "Current" Weather (API Response)
-* Chore - Minor Readme & Description/Tag Updates
-* Chore - Package.json CSS Monitoring
-* New - Powered By Option / Output
-* New - Basic Loading Conditional
+## [0.4.0] - 2022-03-01
+### Added:
+- `developer_tools` Function
+- `WC_DEBUG` Support (for testing multiple environments)
+- Carbon Fields Cleanup (Stylistic)
+- Carbon Fields New Fields & Organization of Output
+- `rest_api_init` name (current, hourly, daily) vs digit (1, 2, 3)
+- React based conditional for footer (logo/powered by notice)
+### Fixed:
+- `remote_openweather_get_data` Disable Data Storage if NULL
+- `api_response_data` echo vs return (better compatibility)
+- `enqueue_wc_widget_js` Removing Empty JS Enqueue
 
-2022.02.25 - version 0.2.0
-* New - `wc_openweather_unit` Admin Option
-* New - `wc_cache_hours` Admin Option
-* New - Scheduled CRON Jobs
-* Fix - @Since Updates
-* Fix - `developer_tests` Removal
+## [0.3.0] - 2022-02-28
+### Added:
+- Basic Design/Layout for Weather
+- Date on "Current" Weather (API Response)
+- Powered By Option / Output
+- Basic Loading Conditional
+### Changed:
+- Minor Readme & Description/Tag Updates
+- Package.json CSS Monitoring
 
-2022.02.25 - version 0.1.0
- * New - OpenWeather API Hooks
- * New - React Shortcode
- * New - Basic Options & Settings
- * New - API Routes & Data Storage
+## [0.2.0] - 2022-02-25
+### Added
+- `wc_openweather_unit` Admin Option
+- `wc_cache_hours` Admin Option
+- Scheduled CRON Jobs
+### Changed:
+- @Since Updates
+- `developer_tests` Removal
+
+## [0.1.0] - 2022-02-25
+### Added:
+ - OpenWeather API Hooks
+ - React Shortcode
+ - Basic Options & Settings
+ - API Routes & Data Storage
