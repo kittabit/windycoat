@@ -2,9 +2,9 @@
 /**
  * @wordpress-plugin
  * Plugin Name: Windy Coat
- * Plugin URI: https://www.windycoat.com
+ * Plugin URI: https://windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
@@ -17,7 +17,10 @@ use Carbon_Fields\Container;
 use Carbon_Fields\Block;
 use Carbon_Fields\Field;
 
-define( 'Carbon_Fields\URL', $_SERVER['HTTP_X_FORWARDED_PROTO'] . "://" . $_SERVER['HTTP_X_FORWARDED_HOST'] . "/wp-content/plugins/windycoat/vendor/htmlburger/carbon-fields" );
+$wc_slug = explode("/", plugin_basename( __FILE__ ));
+$wc_slug = $wc_slug['0'];
+
+define( 'Carbon_Fields\URL', $_SERVER['HTTP_X_FORWARDED_PROTO'] . "://" . $_SERVER['HTTP_X_FORWARDED_HOST'] . "/wp-content/plugins/{$wc_slug}/vendor/htmlburger/carbon-fields" );
 
 if (!class_exists("WindyCoat")) {
 
@@ -31,7 +34,7 @@ if (!class_exists("WindyCoat")) {
 
             $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
             $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-            $this->WC_DB_VERSION = "1.0.0";
+            $this->WC_DB_VERSION = "1.1.0";
 
             register_activation_hook( __FILE__, array($this, 'wc_install') );
 
@@ -343,10 +346,10 @@ if (!class_exists("WindyCoat")) {
             <script>
             window.wcSettings = window.wcSettings || {};
             window.wcSettings = {
-                'latitude': '<?= $wc_lat; ?>',
-                'longitude': '<?= $wc_lon; ?>',
-                'show_logo': '<?= $wc_enable_powered_by; ?>',
-                'unit_of_measurement': '<?= $wc_openweather_unit; ?>'
+                'latitude': '<?php echo esc_js($wc_lat); ?>',
+                'longitude': '<?php echo esc_js($wc_lon); ?>',
+                'show_logo': '<?php echo esc_js($wc_enable_powered_by); ?>',
+                'unit_of_measurement': '<?php echo esc_js($wc_openweather_unit); ?>'
             }
             </script>
             <div class="wc-root"></div>
@@ -365,7 +368,7 @@ if (!class_exists("WindyCoat")) {
 
             Block::make( __( 'WindyCoat Weather' ) )->set_mode("preview")->set_render_callback( function ( $fields, $attributes, $inner_blocks ) {
                 if (strpos($_SERVER['REQUEST_URI'],'carbon-fields') !== false):
-                    echo "[Weather Container]";
+                    echo esc_html("Notice:  Weather block only visible on the front end.");
                 else:
                     echo do_shortcode("[wc_weather]");
                 endif;
@@ -375,26 +378,16 @@ if (!class_exists("WindyCoat")) {
 
 
         /**
-        * Centralized CURL Configuration & Setup
+        * Centralized Remote Data Connection & Data Response
         *
         * @since 0.1.0
         */
         function get_remote_date($url){
 
-            $curl = curl_init($url);
-            curl_setopt($curl, CURLOPT_URL, $url);
-            curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+            $response = wp_remote_get($url);
+            $body = wp_remote_retrieve_body($response);
 
-            $headers = array(
-                "Accept: application/json",
-            );
-            curl_setopt($curl, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-            curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-            $response = curl_exec($curl);
-            curl_close($curl);
-
-            return json_decode($response);
+            return json_decode($body);
 
         }
 
