@@ -4,23 +4,20 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
-require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use Carbon_Fields\Container;
 use Carbon_Fields\Block;
 use Carbon_Fields\Field;
 
-$wc_slug = explode("/", plugin_basename( __FILE__ ));
-$wc_slug = $wc_slug['0'];
-
-define( 'Carbon_Fields\URL', $_SERVER['HTTP_X_FORWARDED_PROTO'] . "://" . $_SERVER['HTTP_X_FORWARDED_HOST'] . "/wp-content/plugins/{$wc_slug}/vendor/htmlburger/carbon-fields" );
+define( 'Carbon_Fields\URL', plugin_dir_path( __FILE__ ) . "/vendor/htmlburger/carbon-fields" );
 
 if (!class_exists("WindyCoat")) {
 
@@ -34,7 +31,7 @@ if (!class_exists("WindyCoat")) {
 
             $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
             $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-            $this->WC_DB_VERSION = "1.1.0";
+            $this->WC_DB_VERSION = "1.1.1";
 
             register_activation_hook( __FILE__, array($this, 'wc_install') );
 
@@ -293,32 +290,34 @@ if (!class_exists("WindyCoat")) {
 
 
         /**
-        * Load all JS/CSS assets from 'weather' React Widget
+        * Load all JS/CSS assets from 'weather' React Widget & Proper 'homepage' Path's (from manifest)
         *
         * @since 0.1.0
         */
         function enqueue_wc_widget_js(){
-
-            $asset_manifest = json_decode( file_get_contents( $this->WC_ASSET_MANIFEST ), true )['files'];
+            
+            $json_assets = file_get_contents( $this->WC_ASSET_MANIFEST );
+            $json_assets = str_replace("/wp-content/plugins/windycoat/", plugin_dir_url( __FILE__ ), $json_assets);
+            $asset_manifest = json_decode( $json_assets, true )['files'];
 
             if ( isset( $asset_manifest[ 'main.css' ] ) ) {
-                wp_enqueue_style( 'wc', get_site_url() . $asset_manifest[ 'main.css' ] );
+                wp_enqueue_style( 'wc', $asset_manifest[ 'main.css' ] );
             }
         
-            wp_enqueue_script( 'wc-main', get_site_url() . $asset_manifest[ 'main.js' ], array(), null, true );
+            wp_enqueue_script( 'wc-main', $asset_manifest[ 'main.js' ], array(), null, true );
         
             foreach ( $asset_manifest as $key => $value ) {
                 if ( preg_match( '@static/js/(.*)\.chunk\.js@', $key, $matches ) ) {
                     if ( $matches && is_array( $matches ) && count( $matches ) === 2 ) {
                     $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                    wp_enqueue_script( $name, get_site_url() . $value, array( 'wc-main' ), null, true );
+                    wp_enqueue_script( $name, $value, array( 'wc-main' ), null, true );
                     }
                 }
             
                 if ( preg_match( '@static/css/(.*)\.chunk\.css@', $key, $matches ) ) {
                     if ( $matches && is_array( $matches ) && count( $matches ) == 2 ) {
                     $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                    wp_enqueue_style( $name, get_site_url() . $value, array( 'wc' ), null );
+                    wp_enqueue_style( $name, $value, array( 'wc' ), null );
                     }
                 }
             }
@@ -346,8 +345,9 @@ if (!class_exists("WindyCoat")) {
             <script>
             window.wcSettings = window.wcSettings || {};
             window.wcSettings = {
+                'wc_base_url': '<?php echo esc_js(plugin_dir_url( __FILE__ )); ?>',
                 'latitude': '<?php echo esc_js($wc_lat); ?>',
-                'longitude': '<?php echo esc_js($wc_lon); ?>',
+                'longitude': '<?php echo esc_js($wc_lon); ?>',                
                 'show_logo': '<?php echo esc_js($wc_enable_powered_by); ?>',
                 'unit_of_measurement': '<?php echo esc_js($wc_openweather_unit); ?>'
             }
