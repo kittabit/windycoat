@@ -11,13 +11,13 @@
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
-require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+require 'vendor/autoload.php';
 
 use Carbon_Fields\Container;
 use Carbon_Fields\Block;
 use Carbon_Fields\Field;
 
-define( 'Carbon_Fields\URL', plugin_dir_path( __FILE__ ) . "/vendor/htmlburger/carbon-fields" );
+define( 'Carbon_Fields\URL', plugin_dir_url( __FILE__ ) . "vendor/htmlburger/carbon-fields" );
 
 if (!class_exists("WindyCoat")) {
 
@@ -271,7 +271,7 @@ if (!class_exists("WindyCoat")) {
         */
         function admin_css_enqueue(){
 
-            wp_enqueue_style( 'windycoat-admin-css', plugin_dir_url( __FILE__ ) . '/public/css/admin.css' );
+            wp_enqueue_style( 'windycoat-admin-css', plugin_dir_url( __FILE__ ) . 'public/css/admin.css' );
 
         }
         
