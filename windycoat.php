@@ -11,7 +11,7 @@
 
 defined( 'ABSPATH' ) or die( 'Direct Access Not Allowed.' );
 
-require 'vendor/autoload.php';
+require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
 
 use Carbon_Fields\Container;
 use Carbon_Fields\Block;
