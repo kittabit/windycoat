@@ -4,7 +4,7 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 1.1.1
+ * Version: 1.2.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
@@ -31,7 +31,7 @@ if (!class_exists("WindyCoat")) {
 
             $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
             $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-            $this->WC_DB_VERSION = "1.1.1";
+            $this->WC_DB_VERSION = "1.2.0";
 
             register_activation_hook( __FILE__, array($this, 'wc_install') );
 
@@ -506,7 +506,11 @@ if (!class_exists("WindyCoat")) {
 
             $selected_type = $data['type'];
 
-            if(!get_option("wc_weather_data")):
+            $wc_weather_last_updated = get_option("wc_weather_last_updated");
+            $wc_cache_hours = get_option( '_wc_cache_hours' );        
+            if(!$wc_cache_hours): $wc_cache_hours = 1; endif;
+
+            if( (!get_option("wc_weather_data")) || (time() - $wc_weather_last_updated > (3601 * $wc_cache_hours)) ):
                 $this->remote_openweather_get_data();            
             endif;
 
