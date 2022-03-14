@@ -1,6 +1,10 @@
 # Changelog
 All notable changes `WindyCoat` will be documented in this file.
 
+## [1.2.0] - 2022-03-14
+### Changed:
+- `api_response_data` Date Comparison (for caching in environments such as WP Engine)
+
 ## [1.1.1] - 2022-03-13
 ### Fixed:
 - Hardcoded path's and URL structures across multiple functions
