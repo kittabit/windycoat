@@ -1,7 +1,7 @@
 {
   "name": "weather",
-  "version": "1.1.1",
-  "homepage": "/wp-content/plugins/windycoat/weather/build",
+  "version": "1.2.1",
+  "homepage": "weather/build",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.2",
