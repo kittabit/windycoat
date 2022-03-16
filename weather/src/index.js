@@ -97,11 +97,11 @@ class App extends React.Component {
                 <div className="windycoat_33_grid">
                   <div className="windycoat_33_grid_column">
                     <span className="windycoat_grid_column_title">Pressure</span>
-                    <span className="windycoat_grid_column_value">{ this.state.weather_current.pressure }</span>
+                    <span className="windycoat_grid_column_value">{ this.state.weather_current.pressure }hPa</span>
                   </div>
                   <div className="windycoat_33_grid_column">
                     <span className="windycoat_grid_column_title">Humidity</span>
-                    <span className="windycoat_grid_column_value">{ this.state.weather_current.humidity }</span>
+                    <span className="windycoat_grid_column_value">{ this.state.weather_current.humidity }%</span>
                   </div>                
                   <div className="windycoat_33_grid_column">
                     <span className="windycoat_grid_column_title">Wind Speed</span>

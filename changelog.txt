@@ -1,6 +1,13 @@
 # Changelog
 All notable changes `WindyCoat` will be documented in this file.
 
+## [1.2.1] - 2022-03-16
+### Fixed:
+- `enqueue_wc_widget_js` implementation w/ plugin_dir_url versus "homepage" in package.json
+### Added:
+- Humidity Percentage 
+- hectoPascals Pressure
+
 ## [1.2.0] - 2022-03-14
 ### Changed:
 - `api_response_data` Date Comparison (for caching in environments such as WP Engine)
