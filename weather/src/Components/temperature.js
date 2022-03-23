@@ -4,19 +4,19 @@ class Temperature extends React.Component {
 
     render() {
 
-        if( this.props.type == "imperial"){
+        if( this.props.type === "imperial"){
             return (
                 <>
                     F
                 </>
             )
-        }else if( this.props.type == "standard"){
+        }else if( this.props.type === "standard"){
             return (
                 <>
                     K
                 </>
             )
-        }else if( this.props.type == "metric"){
+        }else if( this.props.type === "metric"){
             return (
                 <>
                     C

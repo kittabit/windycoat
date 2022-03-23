@@ -1,6 +1,16 @@
 # Changelog
 All notable changes `WindyCoat` will be documented in this file.
 
+## [1.3.0] - 2022-03-23
+### Added:
+- 'wc_openweather_theme' Option (Basic vs Flat UI)
+- 'Basic' vs 'Flat' Individual Components
+-  New 'Flat UI' Design
+### Changed:
+- Footer Function to Component
+### Fixed:
+- '===' and instead saw '=='  eqeqeq error in build
+
 ## [1.2.1] - 2022-03-16
 ### Fixed:
 - `enqueue_wc_widget_js` implementation w/ plugin_dir_url versus "homepage" in package.json

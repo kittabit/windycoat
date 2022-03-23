@@ -4,7 +4,7 @@
  * Plugin Name: Windy Coat
  * Plugin URI: https://windycoat.com
  * Description: WindyCoat allows you to display a beautiful weather page on your WordPress site in a minute without coding skills! 
- * Version: 1.2.1
+ * Version: 1.3.0
  * Author: Nicholas Mercer (@kittabit)
  * Author URI: https://kittabit.com
  */
@@ -31,7 +31,7 @@ if (!class_exists("WindyCoat")) {
 
             $this->WC_WIDGET_PATH = plugin_dir_path( __FILE__ ) . '/weather';
             $this->WC_ASSET_MANIFEST = $this->WC_WIDGET_PATH . '/build/asset-manifest.json';
-            $this->WC_DB_VERSION = "1.2.1";
+            $this->WC_DB_VERSION = "1.3.0";
 
             register_activation_hook( __FILE__, array($this, 'wc_install') );
 
@@ -246,6 +246,11 @@ if (!class_exists("WindyCoat")) {
                 'imperial' => 'Imperial',
             );
 
+            $themes = array(
+                'basic' => 'Basic',
+                'flat' => 'Flat UI'
+            );
+
             Container::make( 'theme_options', 'WindyCoat' )->set_page_parent("options-general.php")->add_fields( array(
                 Field::make( 'separator', 'wc_openweather_basic', 'Basic Settings' )->set_classes( 'windycoat-options-heading' ),
                 Field::make( 'text', 'wc_latitude', "Latitude")->set_width( 50 ),
@@ -255,6 +260,8 @@ if (!class_exists("WindyCoat")) {
                 Field::make( 'text', 'wc_cache_hours', "Hours to Cache")->set_width( 33 ),
                 Field::make( 'select', 'wc_time_zone', 'Time Zone' )->add_options( $timezones )->set_default_value('US/Eastern')->set_width( 33 ),            
                 Field::make( 'select', 'wc_openweather_unit', 'Unit of Measurement' )->add_options( $units )->set_default_value('imperial')->set_width( 33 ),
+                Field::make( 'separator', 'wc_openweather_design', 'Design Options' )->set_classes( 'windycoat-options-heading' ),
+                Field::make( 'select', 'wc_openweather_theme', 'Theme/Design' )->add_options( $themes )->set_default_value('basic'),
                 Field::make( 'separator', 'wc_openweather_misc', 'Misc Options' )->set_classes( 'windycoat-options-heading' ),
                 Field::make( 'checkbox', 'wc_enable_powered_by', __( 'Show Powered By WindyCoat (Footer)' ) )->set_option_value( 'yes' ),
             ));
@@ -308,15 +315,15 @@ if (!class_exists("WindyCoat")) {
             foreach ( $asset_manifest as $key => $value ) {
                 if ( preg_match( '@static/js/(.*)\.chunk\.js@', $key, $matches ) ) {
                     if ( $matches && is_array( $matches ) && count( $matches ) === 2 ) {
-                    $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                    wp_enqueue_script( $name, plugin_dir_url( __FILE__ ) . $value, array( 'wc-main' ), null, true );
+                        $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
+                        wp_enqueue_script( $name, plugin_dir_url( __FILE__ ) . $value, array( 'wc-main' ), null, true );
                     }
                 }
             
                 if ( preg_match( '@static/css/(.*)\.chunk\.css@', $key, $matches ) ) {
                     if ( $matches && is_array( $matches ) && count( $matches ) == 2 ) {
-                    $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
-                    wp_enqueue_style( $name, plugin_dir_url( __FILE__ ) . $value, array( 'wc' ), null );
+                        $name = "wc-" . preg_replace( '/[^A-Za-z0-9_]/', '-', $matches[1] );
+                        wp_enqueue_style( $name, plugin_dir_url( __FILE__ ) . $value, array( 'wc' ), null );
                     }
                 }
             }
@@ -338,7 +345,9 @@ if (!class_exists("WindyCoat")) {
             $wc_lon = carbon_get_theme_option( 'wc_longitude' );
             $wc_enable_powered_by = carbon_get_theme_option( 'wc_enable_powered_by' );
             $wc_openweather_unit = carbon_get_theme_option( 'wc_openweather_unit' );
-            
+            $wc_theme = carbon_get_theme_option( 'wc_openweather_theme' );
+            if(!$wc_theme): $wc_theme = "basic"; endif;
+
             ob_start();
             ?>
             <script>
@@ -348,7 +357,8 @@ if (!class_exists("WindyCoat")) {
                 'latitude': '<?php echo esc_js($wc_lat); ?>',
                 'longitude': '<?php echo esc_js($wc_lon); ?>',                
                 'show_logo': '<?php echo esc_js($wc_enable_powered_by); ?>',
-                'unit_of_measurement': '<?php echo esc_js($wc_openweather_unit); ?>'
+                'unit_of_measurement': '<?php echo esc_js($wc_openweather_unit); ?>',
+                'wc_theme': '<?php echo esc_js($wc_theme); ?>'
             }
             </script>
             <div class="wc-root"></div>
