@@ -12,8 +12,12 @@ After this has been completed, you can add to a page via either of the following
 
 ## CSS Overrides
 
+### Global Overrides:
 * .windycoat_container
 * .windycoat_loading
+
+### Basic Theme Overrides:
+* .windycoat_container.windycoat-theme-basic
 * .windycoat_current_container
 * .windycoat_current_container_left
 * .windycoat_current_description
@@ -39,8 +43,37 @@ After this has been completed, you can add to a page via either of the following
 * .windycoat_footer
 * .windycoat_powered
 
+### FlatUI Theme Overrides:
+* .windycoat_container.windycoat-theme-flat
+* .windycoat_flat_primary_container
+* .windycoat_flat_primary_upper
+* .windycoat_flat_primary_upper img 
+* .windycoat_flat_primary_lower
+* .windycoat_flat_primary_lower_grid_single
+* .windycoat_flat_primary_upper .windycoat_current_description
+* .windycoat_current_date 
+* .windycoat_low_and_high 
+* .windycoat_low_and_high strong
+* .windycoat_low_and_high em 
+* .windycoat_flat_primary_lower_grid_single_forecast
+* .windycoat_flat_primary_lower_grid_single_forecast img 
+* .windycoat_forecast_label
+* .windycoat_forecast_low_high
+* .windycoat_current_temp 
+* .windycoat_low_and_high_inner
+* .windycoat_flat_secondary_container
+* .windycoat_flat_hourly_single
+* .windycoat_flat_hourly_single_item 
+* .windycoat_flat_hourly_single_icon
+* .windycoat_flat_hourly_single_icon img
+* .windycoat_flat_hourly_single_time
+* .windycoat_flat_hourly_single_humidity
+* .windycoat_flat_hourly_single_pressure
+* .windycoat_flat_hourly_single_wind
+* .windycoat_hourly_label 
+
 ## Coming Soon
 
 * Design Options/Themes & Tweaks
 * Documentation & Filters
-* Material Design / UI Build Out
+* Further 3rd Party Weather API Support
